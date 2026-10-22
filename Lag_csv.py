@@ -35,12 +35,13 @@ def txt_til_csv(txt_fil, csv_fil):
         errors="raise",
     )
 
-    data["innstraling_W_m2"] = pd.to_numeric(
-        data["innstraling_W_m2"], errors="coerce"
-    )
-    data["forbruk_Wh"] = pd.to_numeric(
-        data["forbruk_Wh"], errors="coerce"
-    )
+    tallkolonner = ["innstraling_W_m2", "forbruk_Wh"]
+
+    for kolonne in tallkolonner:
+        data[kolonne] = pd.to_numeric(data[kolonne], errors="coerce")
+
+    # Gjør alle negative måleverdier om til 0
+    data[tallkolonner] = data[tallkolonner].clip(lower=0)
 
     data = data.set_index("tid").sort_index()
     data.to_csv(csv_fil, encoding="utf-8")
@@ -57,10 +58,7 @@ maalmappe = Path(
 )
 
 for txt_fil in kildemappe.rglob("*.txt"):
-    # Finn filens plassering relativt til sortert
     relativ_sti = txt_fil.relative_to(kildemappe)
-
-    # Lag samme sti under csv_filer og bytt til .csv
     csv_fil = (maalmappe / relativ_sti).with_suffix(".csv")
 
     try:
